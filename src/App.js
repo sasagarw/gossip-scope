@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import './App.css';
 
-const NODE_COUNT = 5;
-const ROUND_DELAY = 1000; // milliseconds between rounds
+const NODE_COUNT = 10;
+const ROUND_DELAY = 5000; // milliseconds between rounds
 
 const App = () => {
   const [nodes, setNodes] = useState([]);
   const [round, setRound] = useState(0);
+  const [connections, setConnections] = useState([]);
 
   // Initialize nodes with random positions and status
   useEffect(() => {
@@ -26,16 +27,24 @@ const App = () => {
 
     const newNodes = [...nodes];
     const informedNodes = newNodes.filter(node => node.informed);
+    const newConnections = [];
 
     informedNodes.forEach(node => {
-      // Each informed node informs 2 random neighbors
       for (let i = 0; i < 2; i++) {
         const targetNode = newNodes[Math.floor(Math.random() * NODE_COUNT)];
-        if (!targetNode.informed) targetNode.informed = true;
+        if (!targetNode.informed) {
+          targetNode.informed = true;
+          newConnections.push({ source: node, target: targetNode });
+        }
       }
     });
 
     setNodes(newNodes);
+    setConnections(newConnections);
+
+    // Clear the connections after a short delay for fade-out effect
+    setTimeout(() => setConnections([]), ROUND_DELAY / 2);
+
   }, [round]);
 
   // Start gossip rounds with delays
@@ -50,6 +59,18 @@ const App = () => {
     <div className="App">
       <h1>Gossip Scope: A Visual Aid for Learners</h1>
       <svg width="600" height="600" className="network">
+        {connections.map((conn, index) => (
+          <line
+            key={index}
+            x1={conn.source.x}
+            y1={conn.source.y}
+            x2={conn.target.x}
+            y2={conn.target.y}
+            stroke="orange"
+            strokeWidth="2"
+            opacity="0.6"
+          />
+        ))}
         {nodes.map((node, index) => (
           <circle
             key={index}
