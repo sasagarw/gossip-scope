@@ -1,9 +1,11 @@
+/* General App styling */
 .App {
-  text-align: center;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: space-between; /* Align demo and guide side by side */
+  align-items: flex-start; /* Align items to the top */
   font-family: Arial, sans-serif;
+  height: 100vh; /* Make sure it takes the full height of the viewport */
+  padding: 20px;
 }
 
 .App-logo {
@@ -41,11 +43,13 @@
   }
 }
 
+/* Network visualization */
 .network {
   background-color: #f0f0f0;
   margin-top: 20px;
 }
 
+/* Button styling */
 button {
   margin-top: 10px;
   padding: 10px;
@@ -56,16 +60,61 @@ button {
   cursor: pointer;
 }
 
+button:hover {
+  background-color: #45a049; /* Slightly darker green on hover */
+}
+
 button:disabled {
   background-color: #9e9e9e;
   cursor: not-allowed;
 }
 
+/* Round information */
 .round {
   margin-top: 10px;
   font-size: 18px;
 }
 
+/* Line transition for connections in network */
 line {
   transition: opacity 0.5s ease-out;
+}
+
+/* Layout for demo section and learner's guide */
+.demo-section {
+  width: calc(50% - 10px); /* Adjust width to fit alongside guide with some spacing */
+}
+
+.learners-guide {
+  width: calc(50% - 10px); /* Adjust width to fit alongside demo section with some spacing */
+}
+
+.guide-content {
+  padding: 20px;
+}
+
+/* Styling for carousel controls (Previous/Next buttons) */
+.carousel-controls {
+  display: flex;
+  justify-content: space-between; /* Space out Previous and Next buttons */
+}
+
+.carousel-controls button {
+  padding: 10px; /* Add padding for better button size */
+}
+
+/* Additional styling for Learner's Guide section */
+.learners-guide h2 {
+    text-align: center; /* Center the title of Learner's Guide */
+    margin-bottom: 20px; /* Add spacing below the title */
+    font-size: larger;   /* Make the title stand out more */
+}
+
+.guide-content {
+    background-color: #f9f9f9; /* Light background for readability */
+    border-radius: 8px;        /* Rounded corners for content box */
+    box-shadow: rgba(0,0,0,0.1) 0px 4px 12px; /* Subtle shadow for depth */
+    line-height:1.6;           /* Improve readability with better line height */
+    font-size:16px;            /* Set a readable font size for guide content */
+    min-height:300px;          /* Ensure a minimum height for content area */
 }
