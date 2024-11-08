@@ -133,15 +133,23 @@ const App = () => {
             />
           ))}
           {nodes.map((node, index) => (
-            <circle
+            <><circle
               key={index}
               cx={node.x}
               cy={node.y}
-              r={10}
+              r={15}
               fill={node.informed ? 'green' : 'gray'}
               stroke="black"
-              strokeWidth={1}
-            />
+              strokeWidth={1} /><text
+                x={node.x}
+                y={node.y + 4}
+                textAnchor="middle"
+                fill="white"
+                fontSize="8"
+                fontWeight="bold"
+              >
+                N{node.id}
+              </text></>
           ))}
         </svg>
         <div className="round">Round: {round}</div>
