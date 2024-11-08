@@ -2,18 +2,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import './App.css';
 
-const NODE_COUNT = 10;
-const ROUND_DELAY = 5000; // milliseconds between rounds
+const GOSSIP_SPEED = 1000; // Duration for dot animation
 
 const App = () => {
   const [nodes, setNodes] = useState([]);
   const [round, setRound] = useState(0);
-  const [connections, setConnections] = useState([]);
   const [fanout, setFanout] = useState(2);
   const [nodeCount, setNodeCount] = useState(10);
   const [delayBetweenCycles, setDelayBetweenCycles] = useState(5000);
   const [isGossipRunning, setIsGossipRunning] = useState(false);
   const [currentGuideIndex, setCurrentGuideIndex] = useState(0);
+  const [gossipDots, setGossipDots] = useState([]);
 
   // Initialize nodes with random positions and status
   useEffect(() => {
@@ -32,25 +31,29 @@ const App = () => {
 
     const newNodes = [...nodes];
     const informedNodes = newNodes.filter(node => node.informed);
-    const newConnections = [];
+    const newGossipDots = [];
 
     informedNodes.forEach(node => {
       for (let i = 0; i < fanout; i++) {
         const targetNode = newNodes[Math.floor(Math.random() * nodeCount)];
         if (!targetNode.informed) {
           targetNode.informed = true;
-          newConnections.push({ source: node, target: targetNode });
+          newGossipDots.push({
+            source: node,
+            target: targetNode,
+            id: `${node.id}-${targetNode.id}-${round}-${i}`,
+          });
         }
       }
     });
 
     setNodes(newNodes);
-    setConnections(newConnections);
+    setGossipDots(newGossipDots);
 
-    // Clear the connections after a short delay for fade-out effect
-    setTimeout(() => setConnections([]), delayBetweenCycles / 2);
+    // Clear the dots after each round
+    setTimeout(() => setGossipDots([]), GOSSIP_SPEED);
 
-  }, [round, nodeCount, fanout, delayBetweenCycles]);
+  }, [round, nodeCount, fanout]);
 
   // Start gossip rounds with delays
   useEffect(() => {
@@ -120,18 +123,6 @@ const App = () => {
         </div>
 
         <svg width="600" height="600" className="network">
-          {connections.map((conn, index) => (
-            <line
-              key={index}
-              x1={conn.source.x}
-              y1={conn.source.y}
-              x2={conn.target.x}
-              y2={conn.target.y}
-              stroke="orange"
-              strokeWidth="2"
-              opacity="0.6"
-            />
-          ))}
           {nodes.map((node, index) => (
             <><circle
               key={index}
@@ -151,6 +142,32 @@ const App = () => {
                 N{node.id}
               </text></>
           ))}
+          {gossipDots.map((dot, index) => (
+          <image
+            key={dot.id}
+            xlinkHref="/mail-svgrepo-com.svg" // path to your message icon
+            x={dot.source.x}
+            y={dot.source.y}
+            width={20}
+            height={20}
+          >
+            {/* Animate each dot from the source to the target */}
+            <animate
+              attributeName="x"
+              from={dot.source.x}
+              to={dot.target.x}
+              dur={`${GOSSIP_SPEED / 1000}s`}
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="y"
+              from={dot.source.y}
+              to={dot.target.y}
+              dur={`${GOSSIP_SPEED / 1000}s`}
+              repeatCount="indefinite"
+            />
+          </image>
+        ))}
         </svg>
         <div className="round">Round: {round}</div>
         <button onClick={toggleGossip}>
