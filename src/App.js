@@ -13,6 +13,9 @@ const App = () => {
   const [isGossipRunning, setIsGossipRunning] = useState(false);
   const [currentGuideIndex, setCurrentGuideIndex] = useState(0);
   const [gossipDots, setGossipDots] = useState([]);
+  const [showPaths, setShowPaths] = useState(false);
+  const [randomSelectionTargets, setRandomSelectionTargets] = useState([]);
+
 
   // Function to reset all states to initial values
   const resetAllStates = useCallback(() => {
@@ -45,6 +48,33 @@ const App = () => {
     }));
     setNodes(initialNodes);
   }, [nodeCount]);
+
+  // Show Paths Action
+  const handleShowPaths = useCallback(() => {
+    setShowPaths(!showPaths);
+  }, [showPaths]);
+
+  // Random Selection/Fanout Action
+  const handleRandomSelection = useCallback(() => {
+    const informedNodes = nodes.filter(node => node.informed);
+    
+    const randomTargets = informedNodes.flatMap(node => {
+      const possibleTargets = nodes
+        .filter(target => 
+          target.id !== node.id && !target.informed
+        )
+        .sort(() => 0.5 - Math.random())
+        .slice(0, fanout);
+      
+      return possibleTargets.map(target => ({
+        source: node,
+        target: target
+      }));
+    });
+
+    setRandomSelectionTargets(randomTargets);
+  }, [nodes, fanout]);
+
 
   // Run the gossip rounds
   useEffect(() => {
@@ -121,6 +151,10 @@ const App = () => {
         <div className="action">
           <h2>Actions</h2>
           <button onClick={resetAllStates}>Reset Nodes</button>
+          <button onClick={handleShowPaths}>
+            {showPaths ? 'Hide Paths' : 'Show Paths'}
+          </button>
+          <button onClick={handleRandomSelection}>Random Selection</button>
         </div>
 
 
@@ -161,6 +195,40 @@ const App = () => {
         </div>
 
         <svg width="600" height="600" className="network">
+
+           {/* Paths (Yellow Lines) */}
+           {showPaths && nodes.map((node, sourceIndex) => 
+            nodes.map((targetNode, targetIndex) => 
+              node.informed && sourceIndex !== targetIndex ? (
+                <line
+                  key={`path-${sourceIndex}-${targetIndex}`}
+                  x1={node.x}
+                  y1={node.y}
+                  x2={targetNode.x}
+                  y2={targetNode.y}
+                  stroke="yellow"
+                  strokeWidth={2}
+                  strokeOpacity={0.5}
+                />
+              ) : null
+            )
+          )}
+
+          {/* Random Selection Lines (Green) */}
+          {randomSelectionTargets.map((link, index) => (
+            <line
+              key={`random-${index}`}
+              x1={link.source.x}
+              y1={link.source.y}
+              x2={link.target.x}
+              y2={link.target.y}
+              stroke="green"
+              strokeWidth={3}
+              strokeOpacity={0.7}
+            />
+          ))}
+
+          {/* Nodes */}
           {nodes.map((node, index) => (
             <g key={index} onClick={() => handleNodeClick(node.id)}>
               <circle
