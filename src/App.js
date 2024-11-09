@@ -14,6 +14,27 @@ const App = () => {
   const [currentGuideIndex, setCurrentGuideIndex] = useState(0);
   const [gossipDots, setGossipDots] = useState([]);
 
+  // Function to reset all states to initial values
+  const resetAllStates = useCallback(() => {
+    // Reset nodes with initial state
+    const initialNodes = Array.from({ length: nodeCount }, (_, i) => ({
+      id: i,
+      x: Math.random() * 500,
+      y: Math.random() * 500,
+      informed: i === 0, // Start with node 0 as informed
+    }));
+
+    // Reset all states to their initial values
+    setNodes(initialNodes);
+    setRound(0);
+    setFanout(2);
+    setDelayBetweenCycles(5000);
+    setIsGossipRunning(false);
+    setCurrentGuideIndex(0);
+    setGossipDots([]);
+  }, [nodeCount]);
+
+
   // Initialize nodes with random positions and status
   useEffect(() => {
     const initialNodes = Array.from({ length: nodeCount }, (_, i) => ({
@@ -75,6 +96,16 @@ const App = () => {
     setCurrentGuideIndex(prev => (prev + 1) % guideContent.length);
   }, []);
 
+  // Function to handle node click and change its informed status
+  const handleNodeClick = useCallback((nodeId) => {
+    const updatedNodes = nodes.map(node =>
+      node.id === nodeId
+        ? { ...node, informed: true }
+        : node
+    );
+    setNodes(updatedNodes);
+  }, [nodes]);
+
   const guideContent = [
     "Welcome to GossipScope! Click on nodes to infect them.",
     "Use the controls to manage the gossip simulation.",
@@ -85,6 +116,13 @@ const App = () => {
     <div className="App">
       <div className="demo-section">
         <h1>Gossip Scope: A Visual Aid for Learners</h1>
+
+
+        <div className="action">
+          <h2>Actions</h2>
+          <button onClick={resetAllStates}>Reset Nodes</button>
+        </div>
+
 
         <div className="parameters">
           <h2>Parameters</h2>
@@ -124,50 +162,55 @@ const App = () => {
 
         <svg width="600" height="600" className="network">
           {nodes.map((node, index) => (
-            <><circle
-              key={index}
-              cx={node.x}
-              cy={node.y}
-              r={15}
-              fill={node.informed ? 'green' : 'gray'}
-              stroke="black"
-              strokeWidth={1} /><text
+            <g key={index} onClick={() => handleNodeClick(node.id)}>
+              <circle
+                key={index}
+                cx={node.x}
+                cy={node.y}
+                r={15}
+                fill={node.informed ? 'green' : 'gray'}
+                style={{ cursor: 'pointer' }}
+                stroke="black"
+                strokeWidth={1} />
+
+              <text
                 x={node.x}
                 y={node.y + 4}
                 textAnchor="middle"
                 fill="white"
                 fontSize="8"
                 fontWeight="bold"
+                pointerEvents="none"
               >
                 N{node.id}
-              </text></>
+              </text></g>
           ))}
           {gossipDots.map((dot, index) => (
-          <image
-            key={dot.id}
-            xlinkHref="/mail-svgrepo-com.svg" // path to your message icon
-            x={dot.source.x}
-            y={dot.source.y}
-            width={20}
-            height={20}
-          >
-            {/* Animate each dot from the source to the target */}
-            <animate
-              attributeName="x"
-              from={dot.source.x}
-              to={dot.target.x}
-              dur={`${GOSSIP_SPEED / 1000}s`}
-              repeatCount="indefinite"
-            />
-            <animate
-              attributeName="y"
-              from={dot.source.y}
-              to={dot.target.y}
-              dur={`${GOSSIP_SPEED / 1000}s`}
-              repeatCount="indefinite"
-            />
-          </image>
-        ))}
+            <image
+              key={dot.id}
+              xlinkHref="/mail-svgrepo-com.svg" // path to your message icon
+              x={dot.source.x}
+              y={dot.source.y}
+              width={20}
+              height={20}
+            >
+              {/* Animate each dot from the source to the target */}
+              <animate
+                attributeName="x"
+                from={dot.source.x}
+                to={dot.target.x}
+                dur={`${GOSSIP_SPEED / 1000}s`}
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="y"
+                from={dot.source.y}
+                to={dot.target.y}
+                dur={`${GOSSIP_SPEED / 1000}s`}
+                repeatCount="indefinite"
+              />
+            </image>
+          ))}
         </svg>
         <div className="round">Round: {round}</div>
         <button onClick={toggleGossip}>
