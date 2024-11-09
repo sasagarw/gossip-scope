@@ -36,6 +36,7 @@ const App = () => {
     setIsGossipRunning(false);
     setCurrentGuideIndex(0);
     setGossipDots([]);
+    setRandomSelectionTargets([]);
   }, [nodeCount]);
 
 
@@ -185,10 +186,13 @@ const App = () => {
         <div className="action">
           <h2>Actions</h2>
           <button onClick={resetAllStates}>Reset Nodes</button>
+          {" "}
           <button onClick={handleShowPaths}>
             {showPaths ? 'Hide Paths' : 'Show Paths'}
           </button>
+          {" "}
           <button onClick={handleRandomSelection}>Random Selection</button>
+          {" "}
           <button
             onClick={handleSendMessage}
             disabled={randomSelectionTargets.length === 0}
@@ -305,6 +309,7 @@ const App = () => {
               {/* Animate each dot from the source to the target */}
               <animate
                 attributeName="x"
+                begin="0s"
                 from={dot.source.x}
                 to={dot.target.x}
                 dur={`${GOSSIP_SPEED / 500}s`}
@@ -359,6 +364,7 @@ const App = () => {
         <div className="guide-content">{guideContent[currentGuideIndex]}</div>
         <div className="carousel-controls">
           <button onClick={handlePrevGuide}>Previous</button>
+          {" "}
           <button onClick={handleNextGuide}>Next</button>
         </div>
       </div>
