@@ -15,6 +15,7 @@ const App = () => {
   const [gossipDots, setGossipDots] = useState([]);
   const [showPaths, setShowPaths] = useState(false);
   const [randomSelectionTargets, setRandomSelectionTargets] = useState([]);
+  const [messageDots, setMessageDots] = useState([]);
 
 
   // Function to reset all states to initial values
@@ -57,15 +58,15 @@ const App = () => {
   // Random Selection/Fanout Action
   const handleRandomSelection = useCallback(() => {
     const informedNodes = nodes.filter(node => node.informed);
-    
+
     const randomTargets = informedNodes.flatMap(node => {
       const possibleTargets = nodes
-        .filter(target => 
+        .filter(target =>
           target.id !== node.id && !target.informed
         )
         .sort(() => 0.5 - Math.random())
         .slice(0, fanout);
-      
+
       return possibleTargets.map(target => ({
         source: node,
         target: target
@@ -142,6 +143,39 @@ const App = () => {
     "Adjust parameters to see how they affect the spread of information.",
   ];
 
+  // New Send Message Action
+  const handleSendMessage = useCallback(() => {
+    // If no random selection targets exist, do nothing
+    if (randomSelectionTargets.length === 0) {
+      console.log("No targets selected. Use 'Random Selection' first.");
+      return;
+    }
+
+    // Create message dots for each random selection target
+    const newMessageDots = randomSelectionTargets.map((link, index) => ({
+      id: `message-${index}`,
+      source: link.source,
+      target: link.target,
+      progress: 0
+    }));
+
+    // Update nodes and message dots
+    const updatedNodes = [...nodes].map(node => {
+      const targetFound = randomSelectionTargets.some(
+        link => link.target.id === node.id
+      );
+      return targetFound ? { ...node, informed: true } : node;
+    });
+
+    setNodes(updatedNodes);
+    setMessageDots(newMessageDots);
+
+    // Clear message dots after animation
+    setTimeout(() => {
+      setMessageDots([]);
+    }, GOSSIP_SPEED);
+  }, [randomSelectionTargets, nodes]);
+
   return (
     <div className="App">
       <div className="demo-section">
@@ -155,6 +189,12 @@ const App = () => {
             {showPaths ? 'Hide Paths' : 'Show Paths'}
           </button>
           <button onClick={handleRandomSelection}>Random Selection</button>
+          <button
+            onClick={handleSendMessage}
+            disabled={randomSelectionTargets.length === 0}
+          >
+            Send Message
+          </button>
         </div>
 
 
@@ -196,9 +236,9 @@ const App = () => {
 
         <svg width="600" height="600" className="network">
 
-           {/* Paths (Yellow Lines) */}
-           {showPaths && nodes.map((node, sourceIndex) => 
-            nodes.map((targetNode, targetIndex) => 
+          {/* Paths (Yellow Lines) */}
+          {showPaths && nodes.map((node, sourceIndex) =>
+            nodes.map((targetNode, targetIndex) =>
               node.informed && sourceIndex !== targetIndex ? (
                 <line
                   key={`path-${sourceIndex}-${targetIndex}`}
@@ -267,14 +307,42 @@ const App = () => {
                 attributeName="x"
                 from={dot.source.x}
                 to={dot.target.x}
-                dur={`${GOSSIP_SPEED / 1000}s`}
+                dur={`${GOSSIP_SPEED / 500}s`}
                 repeatCount="indefinite"
               />
               <animate
                 attributeName="y"
                 from={dot.source.y}
                 to={dot.target.y}
-                dur={`${GOSSIP_SPEED / 1000}s`}
+                dur={`${GOSSIP_SPEED / 500}s`}
+                repeatCount="indefinite"
+              />
+            </image>
+
+
+          ))}
+          {/* Message Dots */}
+          {messageDots.map((dot) => (
+            <image
+              key={dot.id}
+              xlinkHref="/mail-svgrepo-com.svg"
+              x={dot.source.x}
+              y={dot.source.y}
+              width={20}
+              height={20}
+            >
+              <animate
+                attributeName="x"
+                from={dot.source.x}
+                to={dot.target.x}
+                dur={`${GOSSIP_SPEED / 500}s`}
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="y"
+                from={dot.source.y}
+                to={dot.target.y}
+                dur={`${GOSSIP_SPEED / 500}s`}
                 repeatCount="indefinite"
               />
             </image>
