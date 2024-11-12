@@ -31,14 +31,17 @@ const App = () => {
     // Reset all states to their initial values
     setNodes(initialNodes);
     setRound(0);
-    setFanout(2);
-    setDelayBetweenCycles(5000);
+    // setFanout(2);
+    // setDelayBetweenCycles(5000);
     setIsGossipRunning(false);
     setCurrentGuideIndex(0);
     setGossipDots([]);
     setRandomSelectionTargets([]);
   }, [nodeCount]);
 
+  const calculateMaxRounds = useCallback(() => {
+    return Math.ceil(Math.log(nodeCount) / Math.log(fanout));
+  }, [nodeCount, fanout]);
 
   // Initialize nodes with random positions and status
   useEffect(() => {
@@ -108,17 +111,72 @@ const App = () => {
 
   }, [round, nodeCount, fanout]);
 
+
+  const runGossipRound = useCallback(() => {
+    setNodes(prevNodes => {
+      const newNodes = [...prevNodes];
+      const informedNodes = newNodes.filter(node => node.informed);
+      const newGossipDots = [];
+
+      informedNodes.forEach(node => {
+        const uninformedNodes = newNodes.filter(n => !n.informed);
+        const targetsToInform = Math.min(fanout, uninformedNodes.length);
+
+        // Randomly select uninformed nodes
+        for (let i = 0; i < targetsToInform; i++) {
+          const randomIndex = Math.floor(Math.random() * uninformedNodes.length);
+          const targetNode = uninformedNodes[randomIndex];
+
+          if (targetNode && !targetNode.informed) {
+            targetNode.informed = true;
+            newGossipDots.push({
+              source: node,
+              target: targetNode,
+              id: `${node.id}-${targetNode.id}-${round}-${i}`,
+            });
+            // Remove the informed node from uninformedNodes
+            uninformedNodes.splice(randomIndex, 1);
+          }
+        }
+      });
+
+      setGossipDots(newGossipDots);
+      setTimeout(() => setGossipDots([]), GOSSIP_SPEED);
+
+      return newNodes;
+    });
+  }, [fanout, round]);
+
   // Start gossip rounds with delays
   useEffect(() => {
-    if (isGossipRunning && round < 10) {
-      const timer = setTimeout(() => setRound(round + 1), delayBetweenCycles);
-      return () => clearTimeout(timer);
-    }
-  }, [round, isGossipRunning, delayBetweenCycles]);
+    if (isGossipRunning) {
+      const maxRounds = calculateMaxRounds();
+      const allNodesInformed = nodes.every(node => node.informed);
+      console.log("Round: ", round, "Max Rounds: ", maxRounds, "All Nodes Informed: ", allNodesInformed);
 
+      if (round < maxRounds && !allNodesInformed) {
+        const timer = setTimeout(() => {
+          runGossipRound();
+          setRound(prevRound => prevRound + 1);
+        }, delayBetweenCycles);
+        return () => clearTimeout(timer);
+      } else {
+        setIsGossipRunning(false);
+      }
+    }
+  }, [round, isGossipRunning, delayBetweenCycles, nodes, calculateMaxRounds, runGossipRound]);
+
+  //  toggleGossip function
   const toggleGossip = useCallback(() => {
-    setIsGossipRunning(!isGossipRunning);
-  }, [isGossipRunning]);
+    setIsGossipRunning(prev => {
+      if (!prev) {
+        setRound(1);
+      }
+      return !prev;
+    });
+  }, []);
+
+
 
   const handlePrevGuide = useCallback(() => {
     setCurrentGuideIndex(prev => (prev === 0 ? guideContent.length - 1 : prev - 1));
@@ -151,6 +209,9 @@ const App = () => {
       console.log("No targets selected. Use 'Random Selection' first.");
       return;
     }
+
+    // Increment round
+    setRound(prevRound => prevRound + 1);
 
     // Create message dots for each random selection target
     const newMessageDots = randomSelectionTargets.map((link, index) => ({
@@ -353,6 +414,10 @@ const App = () => {
             </image>
           ))}
         </svg>
+        <div className="max-rounds">
+          Max Rounds: {calculateMaxRounds()}
+        </div>
+
         <div className="round">Round: {round}</div>
         <button onClick={toggleGossip}>
           {isGossipRunning ? 'Pause Gossip' : 'Start Gossip'}
