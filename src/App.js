@@ -80,85 +80,61 @@ const App = () => {
     setRandomSelectionTargets(randomTargets);
   }, [nodes, fanout]);
 
-
-  // Run the gossip rounds
-  useEffect(() => {
-    if (round === 0) return;
-
-    const newNodes = [...nodes];
-    const informedNodes = newNodes.filter(node => node.informed);
-    const newGossipDots = [];
-
-    informedNodes.forEach(node => {
-      for (let i = 0; i < fanout; i++) {
-        const targetNode = newNodes[Math.floor(Math.random() * nodeCount)];
-        if (!targetNode.informed) {
-          targetNode.informed = true;
-          newGossipDots.push({
-            source: node,
-            target: targetNode,
-            id: `${node.id}-${targetNode.id}-${round}-${i}`,
-          });
-        }
-      }
-    });
-
-    setNodes(newNodes);
-    setGossipDots(newGossipDots);
-
-    // Clear the dots after each round
-    setTimeout(() => setGossipDots([]), GOSSIP_SPEED);
-
-  }, [round, nodeCount, fanout]);
-
-
   const runGossipRound = useCallback(() => {
     setNodes(prevNodes => {
       const newNodes = [...prevNodes];
       const informedNodes = newNodes.filter(node => node.informed);
+      const uninformedNodes = newNodes.filter(node => !node.informed);
       const newGossipDots = [];
-
-      informedNodes.forEach(node => {
-        const uninformedNodes = newNodes.filter(n => !n.informed);
-        const targetsToInform = Math.min(fanout, uninformedNodes.length);
-
-        // Randomly select uninformed nodes
-        for (let i = 0; i < targetsToInform; i++) {
-          const randomIndex = Math.floor(Math.random() * uninformedNodes.length);
-          const targetNode = uninformedNodes[randomIndex];
-
-          if (targetNode && !targetNode.informed) {
-            targetNode.informed = true;
-            newGossipDots.push({
-              source: node,
-              target: targetNode,
-              id: `${node.id}-${targetNode.id}-${round}-${i}`,
-            });
-            // Remove the informed node from uninformedNodes
-            uninformedNodes.splice(randomIndex, 1);
+  
+      // Probabilistic spread mechanism
+      informedNodes.forEach(informedNode => {
+        // Limit the number of nodes that can be informed per round
+        const maxInformableNodes = Math.min(fanout, uninformedNodes.length);
+        
+        // Shuffle uninformed nodes to ensure randomness
+        const shuffledUninformedNodes = uninformedNodes
+          .sort(() => 0.5 - Math.random())
+          .slice(0, maxInformableNodes);
+  
+        shuffledUninformedNodes.forEach(targetNode => {
+          // Introduce a probability of information spread (e.g., 70% chance)
+          if (Math.random() < 0.7) {
+            const nodeIndex = newNodes.findIndex(n => n.id === targetNode.id);
+            
+            if (nodeIndex !== -1 && !newNodes[nodeIndex].informed) {
+              newNodes[nodeIndex].informed = true;
+              
+              newGossipDots.push({
+                source: informedNode,
+                target: targetNode,
+                id: `${informedNode.id}-${targetNode.id}`
+              });
+            }
           }
-        }
+        });
       });
-
+  
       setGossipDots(newGossipDots);
       setTimeout(() => setGossipDots([]), GOSSIP_SPEED);
-
+  
       return newNodes;
     });
-  }, [fanout, round]);
+  }, [fanout]);
 
-  // Start gossip rounds with delays
   useEffect(() => {
     if (isGossipRunning) {
       const maxRounds = calculateMaxRounds();
       const allNodesInformed = nodes.every(node => node.informed);
+      
       console.log("Round: ", round, "Max Rounds: ", maxRounds, "All Nodes Informed: ", allNodesInformed);
-
+      
       if (round < maxRounds && !allNodesInformed) {
         const timer = setTimeout(() => {
           runGossipRound();
           setRound(prevRound => prevRound + 1);
         }, delayBetweenCycles);
+        
         return () => clearTimeout(timer);
       } else {
         setIsGossipRunning(false);
@@ -166,7 +142,8 @@ const App = () => {
     }
   }, [round, isGossipRunning, delayBetweenCycles, nodes, calculateMaxRounds, runGossipRound]);
 
-  //  toggleGossip function
+
+  
   const toggleGossip = useCallback(() => {
     setIsGossipRunning(prev => {
       if (!prev) {
