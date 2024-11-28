@@ -16,6 +16,7 @@ const App = () => {
   const [showPaths, setShowPaths] = useState(false);
   const [randomSelectionTargets, setRandomSelectionTargets] = useState([]);
   const [messageDots, setMessageDots] = useState([]);
+  const [globalData, setGlobalData] = useState(null);
 
 
   // Function to reset all states to initial values
@@ -25,7 +26,8 @@ const App = () => {
       id: i,
       x: Math.random() * 500,
       y: Math.random() * 500,
-      informed: i === 0, // Start with node 0 as informed
+      informed: i === 0,
+      data: [],
     }));
 
     // Reset all states to their initial values
@@ -37,6 +39,7 @@ const App = () => {
     setCurrentGuideIndex(0);
     setGossipDots([]);
     setRandomSelectionTargets([]);
+    setGlobalData(null);
   }, [nodeCount]);
 
 
@@ -46,9 +49,15 @@ const App = () => {
       id: i,
       x: Math.random() * 500,
       y: Math.random() * 500,
-      informed: i === 0, // Start with node 0 as informed
+      informed: i === 0,
+      data: [],
     }));
     setNodes(initialNodes);
+
+    // Generate a single random data value at Node 0
+    const initialData = Math.floor(Math.random() * 100);
+    initialNodes[0].data.push(initialData); // Add data to Node 0
+    setGlobalData(initialData);
   }, [nodeCount]);
 
   // Show Paths Action
@@ -90,10 +99,12 @@ const App = () => {
       for (let i = 0; i < fanout; i++) {
         const targetNode = newNodes[Math.floor(Math.random() * nodeCount)];
         if (!targetNode.informed) {
+          targetNode.data.push(globalData);
           targetNode.informed = true;
           newGossipDots.push({
             source: node,
             target: targetNode,
+            data: globalData,
             id: `${node.id}-${targetNode.id}-${round}-${i}`,
           });
         }
@@ -106,7 +117,7 @@ const App = () => {
     // Clear the dots after each round
     setTimeout(() => setGossipDots([]), GOSSIP_SPEED);
 
-  }, [round, nodeCount, fanout]);
+  }, [round, nodeCount, fanout, globalData]);
 
   // Start gossip rounds with delays
   useEffect(() => {
@@ -157,14 +168,18 @@ const App = () => {
       id: `message-${index}`,
       source: link.source,
       target: link.target,
+      data: globalData,
       progress: 0
     }));
 
     // Update nodes and message dots
     const updatedNodes = [...nodes].map(node => {
-      const targetFound = randomSelectionTargets.some(
-        link => link.target.id === node.id
-      );
+      const targetFound = randomSelectionTargets.some(link => {
+        if (link.target.id === node.id) {
+          link.target.data.push(globalData)
+          return true;
+        }
+      });
       return targetFound ? { ...node, informed: true } : node;
     });
 
@@ -295,7 +310,17 @@ const App = () => {
                 pointerEvents="none"
               >
                 N{node.id}
-              </text></g>
+              </text>
+
+              <text
+                x={node.x + 15}
+                y={node.y}
+                fill="black"
+                fontSize="12"
+              >
+                {`[${node.data.join(', ')}]`}
+              </text>
+            </g>
           ))}
           {gossipDots.map((dot, index) => (
             <image
@@ -354,6 +379,9 @@ const App = () => {
           ))}
         </svg>
         <div className="round">Round: {round}</div>
+        <div>
+          <strong>Global Data (Generated at Node 0):</strong> {globalData}
+        </div>
         <button onClick={toggleGossip}>
           {isGossipRunning ? 'Pause Gossip' : 'Start Gossip'}
         </button>
