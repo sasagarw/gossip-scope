@@ -131,7 +131,7 @@ const App = () => {
   
       return newNodes;
     });
-  }, [fanout]);
+  }, [fanout, globalData]);
 
   useEffect(() => {
     if (isGossipRunning) {
