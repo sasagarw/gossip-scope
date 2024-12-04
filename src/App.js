@@ -300,7 +300,7 @@ const App = () => {
           {/* Paths (Yellow Lines) */}
           {showPaths && nodes.map((node, sourceIndex) =>
             nodes.map((targetNode, targetIndex) =>
-              node.informed && sourceIndex !== targetIndex ? (
+              node.informed && !node.failed && sourceIndex !== targetIndex && !targetNode.failed ? (
                 <line
                   key={`path-${sourceIndex}-${targetIndex}`}
                   x1={node.x}
