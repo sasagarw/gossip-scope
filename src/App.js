@@ -503,7 +503,7 @@ const App = () => {
       </div> */}
 
       <div className="learners-guide">
-        <h2>Learner's Guide</h2>
+        <h1>Learner's Guide</h1>
         <div className="guide-content">
           <p dangerouslySetInnerHTML={{ __html: guideContent[currentGuideIndex].replace(/\n/g, '<br />') }} />
         </div>
