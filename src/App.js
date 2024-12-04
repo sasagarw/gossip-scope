@@ -28,6 +28,7 @@ const App = () => {
       y: Math.random() * 500,
       informed: i === 0,
       failed: false,
+      failed: false,
       data: [],
     }));
 
@@ -41,6 +42,11 @@ const App = () => {
     setGossipDots([]);
     setRandomSelectionTargets([]);
     setGlobalData(null);
+
+    // Generate a single random data value at Node 0
+    const initialData = Math.floor(Math.random() * 100);
+    initialNodes[0].data.push(initialData); // Add data to Node 0
+    setGlobalData(initialData);
 
     // Generate a single random data value at Node 0
     const initialData = Math.floor(Math.random() * 100);
@@ -60,6 +66,7 @@ const App = () => {
       y: Math.random() * 500,
       informed: i === 0,
       failed: false,
+      failed: false,
       data: [],
     }));
     setNodes(initialNodes);
@@ -78,10 +85,12 @@ const App = () => {
   // Random Selection/Fanout Action
   const handleRandomSelection = useCallback(() => {
     const informedNodes = nodes.filter(node => node.informed && !node.failed);
+    const informedNodes = nodes.filter(node => node.informed && !node.failed);
 
     const randomTargets = informedNodes.flatMap(node => {
       const possibleTargets = nodes
         .filter(target =>
+          target.id !== node.id && !target.informed && !target.failed
           target.id !== node.id && !target.informed && !target.failed
         )
         .sort(() => 0.5 - Math.random())
@@ -99,6 +108,7 @@ const App = () => {
   const runGossipRound = useCallback(() => {
     setNodes(prevNodes => {
       const newNodes = [...prevNodes];
+      const informedNodes = newNodes.filter(node => node.informed && !node.failed);
       const informedNodes = newNodes.filter(node => node.informed && !node.failed);
       const uninformedNodes = newNodes.filter(node => !node.informed);
       const newGossipDots = [];
@@ -160,6 +170,7 @@ const App = () => {
     }
   }, [round, isGossipRunning, delayBetweenCycles, nodes, calculateMaxRounds, runGossipRound]);
 
+
   const toggleGossip = useCallback(() => {
     setIsGossipRunning(prev => {
       if (!prev) {
@@ -169,6 +180,16 @@ const App = () => {
     });
   }, []);
 
+  // Toggle failure status of a node when clicked
+  const toggleNodeStatus = id => {
+    setNodes(prevNodes =>
+      prevNodes.map(node =>
+        node.id === id
+          ? { ...node, failed: !node.failed, informed: node.failed ? node.informed : false } // Toggle failed state
+          : node
+      )
+    );
+  };
   // Toggle failure status of a node when clicked
   const toggleNodeStatus = id => {
     setNodes(prevNodes =>
@@ -358,7 +379,7 @@ const App = () => {
           {/* Paths (Yellow Lines) */}
           {showPaths && nodes.map((node, sourceIndex) =>
             nodes.map((targetNode, targetIndex) =>
-              node.informed && sourceIndex !== targetIndex ? (
+              node.informed && !node.failed && sourceIndex !== targetIndex && !targetNode.failed ? (
                 <line
                   key={`path-${sourceIndex}-${targetIndex}`}
                   x1={node.x}
@@ -390,11 +411,14 @@ const App = () => {
           {/* Nodes */}
           {nodes.map((node, index) => (
             <g key={index}>
+            <g key={index}>
               <circle
                 key={index}
                 cx={node.x}
                 cy={node.y}
                 r={15}
+                fill={node.failed ? 'red' : node.informed ? 'green' : 'gray'}
+                onClick={() => toggleNodeStatus(node.id)} // Toggle node state on click
                 fill={node.failed ? 'red' : node.informed ? 'green' : 'gray'}
                 onClick={() => toggleNodeStatus(node.id)} // Toggle node state on click
                 style={{ cursor: 'pointer' }}
