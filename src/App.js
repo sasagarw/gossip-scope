@@ -102,26 +102,26 @@ const App = () => {
       const informedNodes = newNodes.filter(node => node.informed && !node.failed);
       const uninformedNodes = newNodes.filter(node => !node.informed);
       const newGossipDots = [];
-  
+
       // Probabilistic spread mechanism
       informedNodes.forEach(informedNode => {
         // Limit the number of nodes that can be informed per round
         const maxInformableNodes = Math.min(fanout, uninformedNodes.length);
-        
+
         // Shuffle uninformed nodes to ensure randomness
         const shuffledUninformedNodes = uninformedNodes
           .sort(() => 0.5 - Math.random())
           .slice(0, maxInformableNodes);
-  
+
         shuffledUninformedNodes.forEach(targetNode => {
           // Introduce a probability of information spread (e.g., 70% chance)
           if (Math.random() < 0.7) {
             const nodeIndex = newNodes.findIndex(n => n.id === targetNode.id);
-            
+
             if (nodeIndex !== -1 && !newNodes[nodeIndex].informed && !newNodes[nodeIndex].failed) {
               targetNode.data.push(globalData);
               newNodes[nodeIndex].informed = true;
-              
+
               newGossipDots.push({
                 source: informedNode,
                 target: targetNode,
@@ -132,10 +132,10 @@ const App = () => {
           }
         });
       });
-  
+
       setGossipDots(newGossipDots);
       setTimeout(() => setGossipDots([]), GOSSIP_SPEED);
-  
+
       return newNodes;
     });
   }, [fanout, globalData]);
@@ -144,15 +144,15 @@ const App = () => {
     if (isGossipRunning) {
       const maxRounds = calculateMaxRounds();
       const allNodesInformed = nodes.every(node => node.informed);
-      
+
       console.log("Round: ", round, "Max Rounds: ", maxRounds, "All Nodes Informed: ", allNodesInformed);
-      
+
       if (round < maxRounds && !allNodesInformed) {
         const timer = setTimeout(() => {
           runGossipRound();
           setRound(prevRound => prevRound + 1);
         }, delayBetweenCycles);
-        
+
         return () => clearTimeout(timer);
       } else {
         setIsGossipRunning(false);
@@ -189,10 +189,68 @@ const App = () => {
   }, []);
 
   const guideContent = [
-    "Welcome to GossipScope! Click on nodes to infect them.",
-    "Use the controls to manage the gossip simulation.",
-    "Adjust parameters to see how they affect the spread of information.",
+    `
+    <div>
+    <p>
+      <h2>Welcome to GossipScope! Let’s dive in and explore how it works interactively.</h2>
+      <p>Dive into the fascinating world of gossip algorithms! This simulator allows you to interactively explore how information spreads through a network. The process runs in cycles, with nodes sharing data with each other at regular intervals.
+      <h3>What do the colors signify?</h3>
+      <li> By default in the network, nodes are <strong>Gray</strong> and uninformed.</li>
+       <li>When a node is informed, it turns <strong>Green</strong>.</li>
+        <li>Click on any node in the network to get started. Once you click, the node will turn <strong>Red</strong>, signifying that it's now "faulty".</li>
+      </p>
+    `,
+    `<div>
+    <h2>Modes of operation</h2>
+     There are 2 modes of operation in the simulator:
+    <ul>
+     <li><strong>Start Gossip:</strong> Automatically running the gossip protocol for a set number of rounds</li>
+      <li><strong>Send Message:</strong> Manually sending a message to a set of nodes</li>
+    </ul>
+    Note: Random Selection must be used before sending a message.
+  </div>`,
+    `<div>
+    <h2>Information Spread</h2>
+    Click <strong>Show Paths</strong> to visualize connections.
+    <ul>
+      <li>Adjust <strong>fanout</strong> to control spread.</li>
+      A higher fanout increases the number of nodes informed per round, leading to faster propagation.
+      <li>Use <strong>Random Selection</strong> to see probabilistic communication.</li>
+      Click the Random Selection button to initiate the random selection of target nodes for information spread. Informed nodes will randomly choose other uninformed nodes to inform, based on the fanout value. The selected nodes will be connected by lines (green lines) to indicate the gossip flow.
+    </ul>
+  </div>`,
+    `<div>
+  <h2>Scaling</h2>
+  <p>
+    Gossip protocols are scalable because they take logarithmic time to propagate information across the network. The max number of rounds required to inform all nodes is calculated using the formula:
+  <p style="font-family: monospace; font-size: 1.2em;">
+    Rounds = log<sub>fanout</sub>(nodes)</p>
+    Let’s see this in action. Try restarting the simulator, changing the number of nodes to 20. You'll notice that doubling the number of nodes results in only one additional cycle, demonstrating the logarithmic nature of the growth.
+  </p>
+</div>
+`,
+`
+<div>
+  <h2>Experimenting with Network Parameters</h2>
+  <ul>
+  <li><strong>Node Count:</strong> Increase or decrease the number of nodes in the network. A higher node count creates a larger network, increasing the complexity of the simulation.</li>
+  <li><strong>Fanout:</strong> Adjust the fanout value to control how many nodes a single informed node can inform at once.</li>
+  <li><strong>Delay Between Cycles:</strong> Modify the delay between rounds to observe how the gossip spread changes with different cycle times.</li>
+  <li><strong>Failures:</strong> Toggle the failure status of nodes to simulate real-world conditions where certain nodes may fail and can no longer inform other nodes.</li>
+  </ul>
+</div>
+`,
+    `
+   <div>
+  <h2>Fault Tolerance in Gossip Protocols</h2>
+  <h3>Node Failure</h3>
+    Gossip protocols are fault-tolerant, meaning the system can still function even when some nodes fail. In the simulator, clicking a node turns it <strong>Red</strong>, indicating failure. Despite this, the other nodes continue to spread information. 
+  <h3>Node Restoration</h3>
+    You can restore a failed node by clicking it again, and it will turn <strong>Gray</strong> resume participating in the network. This illustrates how gossip protocols handle node failures and ensure updates reach all nodes, even when some are temporarily unavailable.
+</div>
+    `
   ];
+
 
   // New Send Message Action
   const handleSendMessage = useCallback(() => {
@@ -300,7 +358,7 @@ const App = () => {
           {/* Paths (Yellow Lines) */}
           {showPaths && nodes.map((node, sourceIndex) =>
             nodes.map((targetNode, targetIndex) =>
-              node.informed && !node.failed && sourceIndex !== targetIndex && !targetNode.failed ? (
+            node.informed && !node.failed && sourceIndex !== targetIndex && !targetNode.failed ? (
                 <line
                   key={`path-${sourceIndex}-${targetIndex}`}
                   x1={node.x}
@@ -434,7 +492,7 @@ const App = () => {
         </button>
       </div>
 
-      <div className="learners-guide">
+      {/* <div className="learners-guide">
         <h2>Learner's Guide</h2>
         <div className="guide-content">{guideContent[currentGuideIndex]}</div>
         <div className="carousel-controls">
@@ -442,7 +500,20 @@ const App = () => {
           {" "}
           <button onClick={handleNextGuide}>Next</button>
         </div>
+      </div> */}
+
+      <div className="learners-guide">
+        <h1>Learner's Guide</h1>
+        <div className="guide-content">
+          <p dangerouslySetInnerHTML={{ __html: guideContent[currentGuideIndex].replace(/\n/g, '<br />') }} />
+        </div>
+        <div className="carousel-controls">
+          <button onClick={handlePrevGuide}>Previous</button>
+          {" "}
+          <button onClick={handleNextGuide}>Next</button>
+        </div>
       </div>
+
     </div>
   );
 };
