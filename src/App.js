@@ -27,6 +27,7 @@ const App = () => {
       x: Math.random() * 500,
       y: Math.random() * 500,
       informed: i === 0,
+      failed: false,
       data: [],
     }));
 
@@ -40,6 +41,11 @@ const App = () => {
     setGossipDots([]);
     setRandomSelectionTargets([]);
     setGlobalData(null);
+
+    // Generate a single random data value at Node 0
+    const initialData = Math.floor(Math.random() * 100);
+    initialNodes[0].data.push(initialData); // Add data to Node 0
+    setGlobalData(initialData);
   }, [nodeCount]);
 
   const calculateMaxRounds = useCallback(() => {
@@ -53,6 +59,7 @@ const App = () => {
       x: Math.random() * 500,
       y: Math.random() * 500,
       informed: i === 0,
+      failed: false,
       data: [],
     }));
     setNodes(initialNodes);
@@ -70,12 +77,12 @@ const App = () => {
 
   // Random Selection/Fanout Action
   const handleRandomSelection = useCallback(() => {
-    const informedNodes = nodes.filter(node => node.informed);
+    const informedNodes = nodes.filter(node => node.informed && !node.failed);
 
     const randomTargets = informedNodes.flatMap(node => {
       const possibleTargets = nodes
         .filter(target =>
-          target.id !== node.id && !target.informed
+          target.id !== node.id && !target.informed && !target.failed
         )
         .sort(() => 0.5 - Math.random())
         .slice(0, fanout);
@@ -92,7 +99,7 @@ const App = () => {
   const runGossipRound = useCallback(() => {
     setNodes(prevNodes => {
       const newNodes = [...prevNodes];
-      const informedNodes = newNodes.filter(node => node.informed);
+      const informedNodes = newNodes.filter(node => node.informed && !node.failed);
       const uninformedNodes = newNodes.filter(node => !node.informed);
       const newGossipDots = [];
   
@@ -111,7 +118,7 @@ const App = () => {
           if (Math.random() < 0.7) {
             const nodeIndex = newNodes.findIndex(n => n.id === targetNode.id);
             
-            if (nodeIndex !== -1 && !newNodes[nodeIndex].informed) {
+            if (nodeIndex !== -1 && !newNodes[nodeIndex].informed && !newNodes[nodeIndex].failed) {
               targetNode.data.push(globalData);
               newNodes[nodeIndex].informed = true;
               
@@ -153,8 +160,6 @@ const App = () => {
     }
   }, [round, isGossipRunning, delayBetweenCycles, nodes, calculateMaxRounds, runGossipRound]);
 
-
-  
   const toggleGossip = useCallback(() => {
     setIsGossipRunning(prev => {
       if (!prev) {
@@ -164,7 +169,16 @@ const App = () => {
     });
   }, []);
 
-
+  // Toggle failure status of a node when clicked
+  const toggleNodeStatus = id => {
+    setNodes(prevNodes =>
+      prevNodes.map(node =>
+        node.id === id
+          ? { ...node, failed: !node.failed, informed: node.failed ? node.informed : false } // Toggle failed state
+          : node
+      )
+    );
+  };
 
   const handlePrevGuide = useCallback(() => {
     setCurrentGuideIndex(prev => (prev === 0 ? guideContent.length - 1 : prev - 1));
@@ -173,16 +187,6 @@ const App = () => {
   const handleNextGuide = useCallback(() => {
     setCurrentGuideIndex(prev => (prev + 1) % guideContent.length);
   }, []);
-
-  // Function to handle node click and change its informed status
-  const handleNodeClick = useCallback((nodeId) => {
-    const updatedNodes = nodes.map(node =>
-      node.id === nodeId
-        ? { ...node, informed: true }
-        : node
-    );
-    setNodes(updatedNodes);
-  }, [nodes]);
 
   const guideContent = [
     "Welcome to GossipScope! Click on nodes to infect them.",
@@ -296,7 +300,7 @@ const App = () => {
           {/* Paths (Yellow Lines) */}
           {showPaths && nodes.map((node, sourceIndex) =>
             nodes.map((targetNode, targetIndex) =>
-              node.informed && sourceIndex !== targetIndex ? (
+              node.informed && !node.failed && sourceIndex !== targetIndex && !targetNode.failed ? (
                 <line
                   key={`path-${sourceIndex}-${targetIndex}`}
                   x1={node.x}
@@ -327,13 +331,14 @@ const App = () => {
 
           {/* Nodes */}
           {nodes.map((node, index) => (
-            <g key={index} onClick={() => handleNodeClick(node.id)}>
+            <g key={index}>
               <circle
                 key={index}
                 cx={node.x}
                 cy={node.y}
                 r={15}
-                fill={node.informed ? 'green' : 'gray'}
+                fill={node.failed ? 'red' : node.informed ? 'green' : 'gray'}
+                onClick={() => toggleNodeStatus(node.id)} // Toggle node state on click
                 style={{ cursor: 'pointer' }}
                 stroke="black"
                 strokeWidth={1} />
