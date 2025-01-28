@@ -1,70 +1,24 @@
-# Getting Started with Create React App
+# Gossip Scope
+Gossip Scope is an interactive visualization tool designed to help learners, researchers, and developers understand the behavior of the Gossip Distributed Protocol. Inspired by tools like RaftScope, Gossip Scope provides real-time graphical simulations of how information propagates through a network using the Gossip protocol.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 🚀 Features
+* **Real-time Visualization**: Watch as nodes exchange information and messages propagate through the network.
+* **Simulate Node Failures**: Test the protocol's fault tolerance by simulating node failures and recoveries.
+* **Interactive Controls**: Modify parameters such as fanout size, cycle delay, and network topology to explore various scenarios.
+* **Automated & Manual Modes**:
+  * _Automated Mode_: Sit back and observe the protocol in action.
+  * _Interactive Mode_: Manually experiment with message propagation for a hands-on learning experience.
+* **Path Visualization**: Highlight communication paths between nodes to better understand message routes.
+* **Educational Guide**: Includes a built-in learner's guide to explain key concepts and actions.
 
-## Available Scripts
+## 🛠️ Technology Stack
+* **Frontend**: React.js for building the user interface.
+* **Visualization**: D3.js for creating dynamic graph visualizations.
+* **Backend**: JavaScript-based logic for simulating the Gossip protocol.
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 📚 About the Gossip Protocol
+The Gossip protocol is widely used in distributed systems for decentralized, fault-tolerant information propagation. Its key features include:
+* **Decentralization**: No central authority; nodes independently gossip with others.
+* **Fault Tolerance**: Resilient to node failures and network partitions.
+* **Scalability**: Efficient communication overhead, suitable for large networks.
+* **Applications**: Used by major systems like DynamoDB (AWS), HashiCorp Consul, and Apache Cassandra.
